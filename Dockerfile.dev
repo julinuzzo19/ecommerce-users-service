@@ -1,0 +1,33 @@
+FROM node:22-alpine
+
+RUN apk add --no-cache bash curl
+
+WORKDIR /app
+
+# PASO CRÍTICO 1: Copiar archivos de configuración y dependencias PRIMERO
+# Esto es una optimización importante de Docker: si estos archivos no cambian,
+# Docker reutilizará la capa cacheada de 'npm install' en builds futuros,
+# lo cual ahorra muchísimo tiempo
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY tsconfig.build.json ./
+COPY nest-cli.json ./
+COPY .eslintrc.cjs ./
+COPY .prettierrc ./
+COPY .prettierignore ./
+
+
+# PASO CRÍTICO 2: Instalar TODAS las dependencias (incluyendo devDependencies)
+# Usamos 'npm install' en lugar de 'npm ci --only=production' porque necesitamos
+# herramientas como tsx, nodemon, typescript, etc. que están en devDependencies
+# Estas herramientas son esenciales para el hot reloading
+RUN npm install
+
+
+COPY src ./src
+
+ARG PORT=3012
+EXPOSE ${PORT}
+
+
+CMD ["npm", "run", "dev"]

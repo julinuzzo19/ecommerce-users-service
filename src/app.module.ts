@@ -34,7 +34,7 @@ import { HealthModule } from 'src/health/health.module';
           'development',
 
         // Logging
-        logging: true,
+        // logging: true,
 
         // SSL for production
         ssl:
@@ -47,12 +47,6 @@ import { HealthModule } from 'src/health/health.module';
         migrationsRun: false,
         cli: {
           migrationsDir: 'src/migrations',
-        },
-        extra: {
-          // Pool connections
-          max: 20, // maximum connections
-          idleTimeoutMillis: 30000,
-          connectionTimeoutMillis: 2000,
         },
       }),
     }),

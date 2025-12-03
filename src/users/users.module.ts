@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/user.entity';
 import { UsersController } from 'src/users/users.controller';
@@ -12,7 +13,7 @@ import { UsersService } from 'src/users/users.service';
    * con TypeORM y hace que el Repository<User> esté disponible
    * para inyección en este módulo.
    */
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [JwtModule.register({}), TypeOrmModule.forFeature([User])],
 
   /**
    * 1. Registra sus rutas en el sistema de routing

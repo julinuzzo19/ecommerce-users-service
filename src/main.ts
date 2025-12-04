@@ -4,6 +4,7 @@ import * as express from 'express';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import { join } from 'path';
+import morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,9 @@ async function bootstrap() {
 
   // add prefix
   app.setGlobalPrefix('api/v1');
+
+  // log http requests
+  app.use(morgan('dev'));
 
   // serve avatar users
   app.use('/avatars', express.static(join(process.cwd(), 'public', 'avatars')));

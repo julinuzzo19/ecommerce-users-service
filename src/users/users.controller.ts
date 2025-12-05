@@ -27,6 +27,7 @@ import { GatewayGuard } from 'src/middlewares/gateway.guard';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(AuthOrGatewayGuard)
   @Get(':id')
   async findById(@Param('id') id: string) {
     const userFound = await this.usersService.findById(id);
@@ -39,8 +40,6 @@ export class UsersController {
   async findByEmail(@Query('email') email: string) {
     const userFound = await this.usersService.findByEmail(email);
 
-    console.log({ userFound, email });
-
     return userFound;
   }
 
@@ -51,7 +50,7 @@ export class UsersController {
     return newUser;
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthOrGatewayGuard)
   @Patch(':id')
   async updateUser(
     @Param('id') userId: string,

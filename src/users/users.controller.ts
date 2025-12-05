@@ -28,17 +28,18 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(AuthOrGatewayGuard)
-  @Get(':id')
-  async findById(@Param('id') id: string) {
-    const userFound = await this.usersService.findById(id);
+  @Get('/by-email')
+  async findByEmail(@Query('email') email: string) {
+    const userFound = await this.usersService.findByEmail(email);
 
     return userFound;
   }
 
   @UseGuards(AuthOrGatewayGuard)
-  @Get('/by-email')
-  async findByEmail(@Query('email') email: string) {
-    const userFound = await this.usersService.findByEmail(email);
+  @Get(':id')
+  async findById(@Param('id') id: string) {
+    console.log('first');
+    const userFound = await this.usersService.findById(id);
 
     return userFound;
   }

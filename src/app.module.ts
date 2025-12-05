@@ -11,7 +11,6 @@ import { HealthModule } from 'src/health/health.module';
     // enable environment variables
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
     }),
     // TypeORM configuration
     TypeOrmModule.forRootAsync({

@@ -67,7 +67,12 @@ async function bootstrap() {
 
   const port = configService.get<number>('PORT') || 3001;
 
-  await app.listen(port);
+  const host =
+    configService.get<string>('NODE_ENV') === 'production'
+      ? configService.get<string>('HOST') || '0.0.0.0'
+      : '0.0.0.0';
+      
+  await app.listen(port, host);
 
   // Registrar métrica de inicio de aplicación
   metricsService.businessOperationsTotal.inc({

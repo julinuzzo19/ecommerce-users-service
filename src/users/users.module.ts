@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthGuard } from 'src/middlewares/auth.guard';
 import { AuthOrGatewayGuard } from 'src/middlewares/authOrGateway.guard';
 import { GatewayGuard } from 'src/middlewares/gateway.guard';
+import { ObservabilityModule } from 'src/observability/observability.module';
 import { User } from 'src/users/user.entity';
 import { UsersController } from 'src/users/users.controller';
 import { UsersService } from 'src/users/users.service';
@@ -16,7 +17,11 @@ import { UsersService } from 'src/users/users.service';
    * con TypeORM y hace que el Repository<User> esté disponible
    * para inyección en este módulo.
    */
-  imports: [JwtModule.register({}), TypeOrmModule.forFeature([User])],
+  imports: [
+    JwtModule.register({}),
+    TypeOrmModule.forFeature([User]),
+    ObservabilityModule,
+  ],
 
   /**
    * 1. Registra sus rutas en el sistema de routing

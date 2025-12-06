@@ -38,7 +38,6 @@ export class UsersController {
   @UseGuards(AuthOrGatewayGuard)
   @Get(':id')
   async findById(@Param('id') id: string) {
-    console.log('first');
     const userFound = await this.usersService.findById(id);
 
     return userFound;

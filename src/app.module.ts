@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthModule } from 'src/health/health.module';
+import { ObservabilityModule } from 'src/observability/observability.module';
+import { MetricsController } from 'src/observability/metrics.controller';
 
 @Module({
   imports: [
+    ObservabilityModule,
     // enable environment variables
     ConfigModule.forRoot({
       isGlobal: true,
@@ -32,7 +33,6 @@ import { HealthModule } from 'src/health/health.module';
           configService.get<string>('NODE_ENV', 'development') ===
           'development',
 
-        // Logging
         // logging: true,
 
         // SSL for production
@@ -52,7 +52,7 @@ import { HealthModule } from 'src/health/health.module';
     UsersModule,
     HealthModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [MetricsController],
+  providers: [],
 })
 export class AppModule {}

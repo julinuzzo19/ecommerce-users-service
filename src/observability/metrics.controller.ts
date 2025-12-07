@@ -15,7 +15,7 @@ export class MetricsController {
   getHealth() {
     return {
       status: 'healthy',
-      service: process.env.SERVICE_NAME || 'nestjs-service',
+      service: process.env.SERVICE_NAME ,
       timestamp: new Date().toISOString(),
     };
   }

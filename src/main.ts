@@ -1,6 +1,6 @@
 // First import tracing NEEDED FOR INITIALIZATION
 import { initializeTracing } from './observability/tracing';
-const serviceName = process.env.SERVICE_NAME || 'nestjs-service';
+const serviceName = process.env.SERVICE_NAME;
 initializeTracing(serviceName);
 
 import { NestFactory } from '@nestjs/core';
@@ -71,7 +71,7 @@ async function bootstrap() {
     configService.get<string>('NODE_ENV') === 'production'
       ? configService.get<string>('HOST') || '0.0.0.0'
       : '0.0.0.0';
-      
+
   await app.listen(port, host);
 
   // Registrar métrica de inicio de aplicación

@@ -49,7 +49,7 @@ export class UsersController {
     return await this.usersService.findAll();
   }
 
-  @UseGuards(GatewayGuard)
+  @UseGuards(AuthOrGatewayGuard)
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
     const newUser = await this.usersService.createUser(createUserDto);

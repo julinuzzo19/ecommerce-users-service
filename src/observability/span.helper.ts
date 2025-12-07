@@ -1,6 +1,6 @@
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 
-export const tracer = trace.getTracer('nestjs-service');
+export const tracer = trace.getTracer(process.env.SERVICE_NAME);
 
 export async function withSpan<T>(
   name: string,

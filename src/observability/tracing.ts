@@ -16,10 +16,12 @@ import {
 
 // Configuración del SDK
 export function initializeTracing(serviceName: string) {
+  const otlpEndpoint =
+    process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
+    'http://localhost:4318/v1/traces';
+
   const traceExporter = new OTLPTraceExporter({
-    url:
-      process.env.OTEL_EXPORTER_OTLP_ENDPOINT ||
-      'http://localhost:4318/v1/traces',
+    url: otlpEndpoint,
     headers: process.env.OTEL_EXPORTER_OTLP_HEADERS
       ? JSON.parse(process.env.OTEL_EXPORTER_OTLP_HEADERS)
       : {},
@@ -30,9 +32,7 @@ export function initializeTracing(serviceName: string) {
     [ATTR_SERVICE_VERSION]: process.env.SERVICE_VERSION || '1.0.0',
     [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: process.env.NODE_ENV || 'development',
     [ATTR_SERVICE_INSTANCE_ID]:
-      process.env.HOSTNAME ||
-      process.env.POD_NAME ||
-      `instance-${Date.now()}`,
+      process.env.HOSTNAME || process.env.POD_NAME || `instance-${Date.now()}`,
     [ATTR_TELEMETRY_SDK_NAME]: 'opentelemetry',
     [ATTR_TELEMETRY_SDK_LANGUAGE]: 'nodejs',
     [ATTR_TELEMETRY_SDK_VERSION]: process.env.OTEL_SDK_VERSION || '1.0.0',
@@ -50,8 +50,14 @@ export function initializeTracing(serviceName: string) {
       }),
     ],
   });
-  sdk.start();
-  console.log(`✅ OpenTelemetry iniciado para ${serviceName}`);
+  try {
+    sdk.start();
+    console.log(`✅ OpenTelemetry iniciado correctamente para ${serviceName}`);
+    console.log(`📊 Exportando traces a: ${otlpEndpoint}`);
+  } catch (error) {
+    console.error('❌ Error iniciando OpenTelemetry:', error);
+    console.warn('⚠️  La aplicación continuará sin tracing');
+  }
 
   process.on('SIGTERM', () => {
     sdk

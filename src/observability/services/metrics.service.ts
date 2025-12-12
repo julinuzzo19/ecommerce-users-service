@@ -11,6 +11,7 @@ export class MetricsService {
 
   // Métricas de negocio (ejemplo)
   public readonly businessOperationsTotal: client.Counter;
+  public readonly businessOperationDuration: client.Histogram;
 
   constructor() {
     this.register = new client.Registry();
@@ -35,6 +36,15 @@ export class MetricsService {
       labelNames: ['method', 'route', 'status_code'],
       buckets: [0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10],
       registers: [this.register],
+    });
+
+    this.businessOperationDuration = new client.Histogram({
+      name: 'business_operation_duration_seconds',
+      help: 'Duración de operaciones de negocio',
+      // requeridos si se agregan aca
+      labelNames: ['operation', 'status'],
+      // personalizados para consultas e inserciones a db (mas rapidos que peticiones http)
+      buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1],
     });
 
     // Métricas de negocio personalizadas

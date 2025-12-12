@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -55,24 +56,55 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
+    this.logger.info('Get all users');
+
     return await this.usersRepository.find();
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<string> {
-    const user = this.usersRepository.create(createUserDto);
-
-    this.logger.info('Creando usuario', { userData: createUserDto });
-
-    await this.usersRepository.save(user);
-
-    // Se crean metricas especificas cuando necesitas etiquetas mas personalizadas, como pais
-
-    this.metrics.businessOperationsTotal.inc({
-      operation: 'users.createUser',
-      status: 'success',
+    const end = this.metrics.businessOperationDuration.startTimer({
+      operation: 'users.insertUser',
+      status: 'success', // Puedes cambiar a 'failure' en el catch
     });
+    return withSpan('UsersService.createUser', async (span) => {
+      try {
+        const user = this.usersRepository.create(createUserDto);
 
-    return user.id;
+        this.logger.info('Creando usuario', { userData: createUserDto });
+
+        await this.usersRepository.save(user);
+
+        // TODO: usar rabbit par publicar evento de usuario creado
+
+        span.setAttribute('user.id', user.id);
+        span.setAttribute('user.email', user.email);
+
+        this.metrics.businessOperationsTotal.inc({
+          operation: 'users.createUser',
+          status: 'success',
+        });
+
+        return user.id;
+      } catch (error) {
+        end({ status: 'failure' }); // Registra el tiempo con status 'failure'
+
+        this.logger.error(
+          { error, userData: createUserDto },
+          'Error creating user',
+        );
+        this.metrics.businessOperationsTotal.inc({
+          operation: 'users.insertUser',
+          status: 'failure',
+        });
+
+        span.setAttribute('error', true);
+        span.setAttribute('error.message', (error as Error).message);
+
+        throw new BadRequestException('Error creating user', {
+          cause: error as Error,
+        });
+      }
+    });
   }
 
   async updateUser(userId: string, updateData: UpdateUserDto): Promise<User> {

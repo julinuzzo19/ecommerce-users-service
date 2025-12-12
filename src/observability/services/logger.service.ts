@@ -19,7 +19,8 @@ export class LoggerService implements NestLoggerService {
         return traceId ? { trace_id: traceId } : {};
       },
       transport:
-        process.env.NODE_ENV === 'development'
+        process.env.NODE_ENV === 'development' &&
+        process.env.IN_DOCKER !== 'true'
           ? {
               target: 'pino-pretty',
               options: {

@@ -47,6 +47,17 @@ import { MetricsController } from 'src/observability/metrics.controller';
         cli: {
           migrationsDir: 'src/migrations',
         },
+
+        connectTimeout: 10000, // 10 seconds
+        // acquireTimeout: 10000, // 10 segundos para adquirir conexión del pool
+        timeout: 10000, // 10 segundos para queries (MySQL specific)
+
+        extra: {
+          connectionLimit: 10,
+          queueLimit: 0,
+          waitForConnections: true,
+          connectTimeout: 10000, // También aquí para el driver mysql2
+        },
       }),
     }),
     UsersModule,

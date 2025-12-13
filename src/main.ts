@@ -14,6 +14,7 @@ import pinoHttp from 'pino-http';
 import { MetricsInterceptor } from 'src/observability/interceptors/metrics.interceptor';
 import { AllExceptionsFilter } from 'src/observability/filters/error.filters';
 import { MetricsService } from 'src/observability/services/metrics.service';
+import type { Server } from 'http';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -72,7 +73,9 @@ async function bootstrap() {
       ? configService.get<string>('HOST') || '0.0.0.0'
       : '0.0.0.0';
 
-  await app.listen(port, host);
+  const server: Server = await app.listen(port, host);
+
+  server.setTimeout(10000); // 10 segundos para requests HTTP
 
   // Registrar métrica de inicio de aplicación
   metricsService.businessOperationsTotal.inc({

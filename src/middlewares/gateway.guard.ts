@@ -4,24 +4,32 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class GatewayGuard implements CanActivate {
-  constructor(private configService: ConfigService) {}
-
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    const gatewaySecret = request.headers['x-gateway-secret'];
-
-    if (!gatewaySecret) {
-      throw new UnauthorizedException('Gateway secret is required');
+    // Si no es HTTP (ej: microservices/ws), no aplicamos este guard.
+    if (context.getType() !== 'http') {
+      return true;
     }
 
-    const expectedSecret = this.configService.get<string>('GATEWAY_SECRET');
+    const request = context.switchToHttp().getRequest() as Request & {
+      isGatewayRequest?: boolean;
+    };
 
-    if (gatewaySecret !== expectedSecret) {
-      throw new UnauthorizedException('Invalid gateway secret');
+    // Endpoints de infra suelen necesitar ser públicos (liveness/readiness/metrics).
+    // Si querés que también requieran gateway secret, eliminá este bloque.
+    const url = typeof request?.url === 'string' ? request.url : '';
+    const method = typeof request?.method === 'string' ? request.method : '';
+    if (
+      method === 'GET' &&
+      (url === '/health' || url.startsWith('/health?') || url === '/metrics')
+    ) {
+      return true;
+    }
+
+    if (!request?.isGatewayRequest) {
+      throw new UnauthorizedException('Gateway secret is required');
     }
 
     return true;

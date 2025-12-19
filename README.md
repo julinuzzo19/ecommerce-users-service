@@ -16,6 +16,7 @@ Este microservicio utiliza la misma base de datos que el microservicio de autent
 - **Tabla de credenciales**: Gestionada por el microservicio de autenticación (username, password hash, tokens)
 
 Esta arquitectura permite:
+
 - Separación de responsabilidades entre autenticación y gestión de perfiles
 - Compartir la misma base de datos para mantener consistencia
 - Escalabilidad independiente de cada microservicio

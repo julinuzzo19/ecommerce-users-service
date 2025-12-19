@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthModule } from 'src/health/health.module';
 import { ObservabilityModule } from 'src/observability/observability.module';
 import { MetricsController } from 'src/observability/metrics.controller';
+import { GatewayGuard } from 'src/middlewares/gateway.guard';
 
 @Module({
   imports: [
@@ -64,6 +65,6 @@ import { MetricsController } from 'src/observability/metrics.controller';
     HealthModule,
   ],
   controllers: [MetricsController],
-  providers: [],
+  providers: [GatewayGuard],
 })
 export class AppModule {}

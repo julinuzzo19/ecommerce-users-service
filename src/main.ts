@@ -7,7 +7,6 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { RequestMethod } from '@nestjs/common';
-import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { LoggerService } from './observability/services/logger.service';
 import pinoHttp from 'pino-http';
@@ -15,6 +14,9 @@ import { MetricsInterceptor } from 'src/observability/interceptors/metrics.inter
 import { AllExceptionsFilter } from 'src/observability/filters/error.filters';
 import { MetricsService } from 'src/observability/services/metrics.service';
 import type { Server } from 'http';
+import { requestIdMiddleware } from './middlewares/requestId.middleware';
+import { createGatewayDetectionMiddleware } from './middlewares/gatewayDetection.middleware';
+import { GatewayGuard } from 'src/middlewares/gateway.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -25,19 +27,43 @@ async function bootstrap() {
   const metricsService = app.get(MetricsService);
   const metricsInterceptor = app.get(MetricsInterceptor);
   const exceptionFilter = app.get(AllExceptionsFilter);
+  const configService = app.get(ConfigService);
+  const gatewayGuard = app.get(GatewayGuard);
 
   app.useLogger(logger);
 
-  // global metrics interceptor
+  // Global guard (NestJS): corre en el pipeline de Nest, después de los middlewares de Express.
+  // Depende de req.isGatewayRequest seteado por gatewayDetectionMiddleware.
+  app.useGlobalGuards(gatewayGuard);
+
+  // Interceptors globales (NestJS)
+  // Nota: los interceptors NO corren antes que los middlewares de Express.
+  // Orden real (alto nivel) para una request HTTP:
+  // 1) Express middlewares (en el orden en que se registran con app.use)
+  // 2) Nest pipeline: Guards -> Interceptors (before) -> Pipes -> Controller/Handler
+  // 3) Nest pipeline unwind: Interceptors (after)
+  // 4) Exception filters (si hubo excepción en el pipeline de Nest)
   app.useGlobalInterceptors(metricsInterceptor);
+
+  // Middlewares de Express (orden importa)
+  // - requestIdMiddleware debe correr antes de pino-http para que pino-http pueda
+  //   usar req.id / x-request-id y correlacionar logs.
+  // - gatewayDetectionMiddleware debe correr antes de Guards que dependan de
+  //   req.isGatewayRequest (ej: GatewayGuard si se usa a futuro).
+  app.use(requestIdMiddleware);
+  app.use(
+    createGatewayDetectionMiddleware({
+      expectedSecret: configService.get<string>('GATEWAY_SECRET'),
+    }),
+  );
 
   // log http requests
   app.use(pinoHttp({ logger: (logger as any).logger }));
 
-  // global exception filter
+  // Exception filter global (NestJS)
+  // Importante: captura excepciones del pipeline de Nest (guards/interceptors/pipes/controllers)
+  // pero NO reemplaza a los error-handlers de Express para fallos dentro de middlewares puros.
   app.useGlobalFilters(exceptionFilter);
-
-  const configService = app.get(ConfigService);
 
   // helmet configuration
   app.use(helmet());
@@ -51,9 +77,6 @@ async function bootstrap() {
         : '*',
     credentials: true,
   });
-
-  // cookie configuration
-  app.use(cookieParser());
 
   // add prefix
   app.setGlobalPrefix('api/v1', {

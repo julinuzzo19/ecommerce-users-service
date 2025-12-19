@@ -1,9 +1,9 @@
-import { Request } from 'express';
-import { User } from '../users/user.entity';
-
-declare module 'express' {
+declare module 'express-serve-static-core' {
   interface Request {
     user?: { sub: string; email: string }; // Puedes especificar el tipo exacto de tu objeto usuario
+    requestId?: string;
+    id?: string;
+    isGatewayRequest?: boolean;
   }
 }
 
@@ -19,6 +19,7 @@ declare global {
       CLIENT_URL: string;
       PORT: number;
       JWT_SECRET: string;
+      GATEWAY_SECRET: string;
     }
   }
 }
